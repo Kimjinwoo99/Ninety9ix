@@ -147,6 +147,35 @@ npm run dev
   `/api/run-agent`            문서 분석 실행
 
 ------------------------------------------------------------------------
+
+## Model Setup
+
+체크박스 위치 탐지를 위해 YOLO 모델(`best.pt`)이 필요합니다.  
+모델 파일은 용량 문제로 GitHub 저장소에 포함되어 있지 않습니다.
+
+아래 링크에서 모델을 다운로드한 후 다음 경로에 배치해 주세요.
+
+```
+Ninety9ix/backend/GetLocation/models/best.pt
+```
+
+### Model Download
+
+Download Link:  
+https://drive.google.com/file/d/1wSXW_Br1cibOczj4xF-97mcKOSCtuXSX/view?usp=drive_link
+
+### 디렉터리 구조 예시
+
+```
+backend
+ └ GetLocation
+    └ models
+       └ best.pt
+```
+
+모델이 해당 경로에 존재하지 않을 경우 **체크박스 위치 탐지 기능(YOLO)이 정상적으로 동작하지 않습니다.**
+
+------------------------------------------------------------------------
 ## Environment Variables
 
 이 프로젝트는 일부 기능에서 **OpenAI API** 및 **외부 OCR API**를 사용합니다.  
@@ -195,7 +224,7 @@ Git 저장소에 업로드하지 않습니다.
 .env
 ```
 
----
+------------------------------------------------------------------------
 
 ## 제한 사항 (Limitations)
 
