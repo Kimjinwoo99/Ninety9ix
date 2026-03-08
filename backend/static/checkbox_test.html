@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>체크박스 에이전트 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .upload-section {
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .upload-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-button:active {
+            transform: translateY(0);
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .image-container {
+            position: relative;
+            background: #fff;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 600px;
+            cursor: crosshair;
+            user-select: none;
+        }
+
+        .image-container .placeholder {
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .click-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ff4444;
+            border-radius: 50%;
+            background: rgba(255, 68, 68, 0.3);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .checkbox-marker {
+            position: absolute;
+            border: 2px solid #28a745;
+            background: rgba(40, 167, 69, 0.1);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .checkbox-marker.selected {
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.2);
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 2px solid #dee2e6;
+        }
+
+        .result-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+
+        .result-item.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .result-item.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .result-item h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .result-item p {
+            color: #666;
+            font-size: 0.9em;
+            margin: 3px 0;
+        }
+
+        .checkbox-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .checkbox-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .checkbox-item.selected {
+            border-color: #ffc107;
+            background: #fff8e1;
+        }
+
+        .checkbox-item h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-item .info {
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-badge.selected {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .status-badge.unselected {
+            background: #6c757d;
+            color: white;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            flex: 1;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .control-group input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .control-group input[type="checkbox"] {
+            margin-top: 8px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .json-viewer {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☑️ 체크박스 에이전트 테스트</h1>
+            <p>structured_output.json의 좌표를 기반으로 체크박스를 선택합니다</p>
+        </div>
+
+        <div class="content">
+            <!-- 왼쪽 패널: 이미지 및 클릭 처리 -->
+            <div class="panel">
+                <h2>📄 문서 이미지</h2>
+                
+                <div class="upload-section">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="imageInput" class="file-input" accept="image/*">
+                        <button class="upload-button" onclick="document.getElementById('imageInput').click()">
+                            📷 이미지 선택하기
+                        </button>
+                    </div>
+                    <p class="info-text">document.jpg 또는 신청서 이미지를 업로드하세요</p>
+                </div>
+
+                <div class="upload-section">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="jsonInput" class="file-input" accept=".json">
+                        <button class="upload-button" onclick="document.getElementById('jsonInput').click()">
+                            📋 structured_output.json 업로드
+                        </button>
+                    </div>
+                    <p class="info-text">structured_output.json 파일을 업로드하세요</p>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label>허용 오차 (tolerance)</label>
+                        <input type="number" id="toleranceInput" value="10" min="0" max="100" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="useBboxInput" checked>
+                            바운딩 박스 사용
+                        </label>
+                    </div>
+                </div>
+
+                <div class="image-container" id="imageContainer">
+                    <div class="placeholder">이미지를 업로드하세요</div>
+                </div>
+
+                <div class="result-section" id="resultSection" style="display: none;">
+                    <div id="resultContent"></div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 패널: 체크박스 목록 및 JSON -->
+            <div class="panel">
+                <h2>📋 체크박스 목록</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>처리 중...</p>
+                </div>
+
+                <div class="checkbox-list" id="checkboxList">
+                    <p style="text-align: center; color: #999; padding: 20px;">
+                        structured_output.json을 업로드하면 체크박스 목록이 표시됩니다
+                    </p>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #667eea; margin-bottom: 10px;">📄 수정된 JSON</h3>
+                    <div class="json-viewer" id="jsonViewer">
+                        JSON 데이터가 여기에 표시됩니다
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let structuredOutputData = null;
+        let currentImage = null;
+        let imageScale = 1;
+        let checkboxes = [];
+        let clickMarkers = [];
+        let checkboxMarkers = [];
+
+        // 이미지 업로드
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    currentImage = img;
+                    const container = document.getElementById('imageContainer');
+                    container.innerHTML = '';
+                    container.appendChild(img);
+                    
+                    // 이미지 크기에 맞춰 스케일 계산
+                    const containerWidth = container.clientWidth;
+                    imageScale = containerWidth / img.width;
+                    
+                    // 체크박스 마커 다시 그리기
+                    drawCheckboxMarkers();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // JSON 업로드
+        document.getElementById('jsonInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    structuredOutputData = JSON.parse(event.target.result);
+                    loadCheckboxes();
+                } catch (err) {
+                    alert('JSON 파일 파싱 오류: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // 체크박스 목록 로드
+        async function loadCheckboxes() {
+            if (!structuredOutputData) return;
+
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+
+            try {
+                const response = await fetch('/api/checkbox/list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        structured_output: structuredOutputData
+                    })
+                });
+
+                const result = await response.json();
+                loading.classList.remove('active');
+
+                if (result.success) {
+                    checkboxes = result.checkboxes;
+                    displayCheckboxList();
+                    drawCheckboxMarkers();
+                    updateJsonViewer();
+                } else {
+                    alert('체크박스 목록 로드 실패: ' + result.error);
+                }
+            } catch (err) {
+                loading.classList.remove('active');
+                alert('서버 연결 오류: ' + err.message);
+            }
+        }
+
+        // 체크박스 목록 표시
+        function displayCheckboxList() {
+            const list = document.getElementById('checkboxList');
+            list.innerHTML = '';
+
+            if (checkboxes.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">체크박스를 찾을 수 없습니다</p>';
+                return;
+            }
+
+            checkboxes.forEach((checkbox, index) => {
+                const item = document.createElement('div');
+                item.className = `checkbox-item ${checkbox.selected ? 'selected' : ''}`;
+                item.innerHTML = `
+                    <h4>
+                        ${checkbox.name || '이름 없음'}
+                        <span class="status-badge ${checkbox.selected ? 'selected' : 'unselected'}">
+                            ${checkbox.selected ? '선택됨' : '미선택'}
+                        </span>
+                    </h4>
+                    <div class="info">
+                        경로: ${checkbox.path}<br>
+                        좌표: (${Math.round(checkbox.center[0])}, ${Math.round(checkbox.center[1])})
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // 체크박스 마커 그리기
+        function drawCheckboxMarkers() {
+            if (!currentImage || !checkboxes.length) return;
+
+            // 기존 마커 제거
+            checkboxMarkers.forEach(marker => marker.remove());
+            checkboxMarkers = [];
+
+            const container = document.getElementById('imageContainer');
+            
+            checkboxes.forEach(checkbox => {
+                const points = checkbox.points;
+                if (!points || points.length < 2) return;
+
+                // 바운딩 박스 계산
+                const x_coords = points.map(p => p[0] * imageScale);
+                const y_coords = points.map(p => p[1] * imageScale);
+                
+                const x_min = Math.min(...x_coords);
+                const x_max = Math.max(...x_coords);
+                const y_min = Math.min(...y_coords);
+                const y_max = Math.max(...y_coords);
+
+                const marker = document.createElement('div');
+                marker.className = `checkbox-marker ${checkbox.selected ? 'selected' : ''}`;
+                marker.style.left = x_min + 'px';
+                marker.style.top = y_min + 'px';
+                marker.style.width = (x_max - x_min) + 'px';
+                marker.style.height = (y_max - y_min) + 'px';
+                marker.title = checkbox.name || '체크박스';
+
+                container.appendChild(marker);
+                checkboxMarkers.push(marker);
+            });
+        }
+
+        // 이미지 클릭 이벤트
+        document.getElementById('imageContainer').addEventListener('click', async function(e) {
+            if (!currentImage || !structuredOutputData) {
+                alert('이미지와 structured_output.json을 먼저 업로드하세요.');
+                return;
+            }
+
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / imageScale;
+            const y = (e.clientY - rect.top) / imageScale;
+
+            // 클릭 마커 표시
+            const marker = document.createElement('div');
+            marker.className = 'click-marker';
+            marker.style.left = e.clientX - rect.left + 'px';
+            marker.style.top = e.clientY - rect.top + 'px';
+            e.currentTarget.appendChild(marker);
+            clickMarkers.push(marker);
+
+            // 3초 후 마커 제거
+            setTimeout(() => {
+                marker.remove();
+                clickMarkers = clickMarkers.filter(m => m !== marker);
+            }, 3000);
+
+            // API 호출
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+
+            const tolerance = parseFloat(document.getElementById('toleranceInput').value);
+            const useBbox = document.getElementById('useBboxInput').checked;
+
+            try {
+                const response = await fetch('/api/checkbox/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        structured_output: structuredOutputData,
+                        click_x: x,
+                        click_y: y,
+                        use_bbox: useBbox,
+                        tolerance: tolerance
+                    })
+                });
+
+                const result = await response.json();
+                loading.classList.remove('active');
+
+                displayResult(result);
+
+                if (result.success && result.updated) {
+                    // 업데이트된 structured_output 저장
+                    structuredOutputData = result.updated_structured_output;
+                    // 체크박스 목록 새로고침
+                    await loadCheckboxes();
+                }
+            } catch (err) {
+                loading.classList.remove('active');
+                alert('서버 연결 오류: ' + err.message);
+            }
+        });
+
+        // 결과 표시
+        function displayResult(result) {
+            const section = document.getElementById('resultSection');
+            const content = document.getElementById('resultContent');
+            
+            section.style.display = 'block';
+
+            if (result.success) {
+                content.innerHTML = `
+                    <div class="result-item success">
+                        <h3>✅ 처리 성공</h3>
+                        <p><strong>체크박스:</strong> ${result.checkbox.name || '이름 없음'}</p>
+                        <p><strong>경로:</strong> ${result.path}</p>
+                        <p><strong>거리:</strong> ${result.distance.toFixed(2)} 픽셀</p>
+                        <p><strong>상태:</strong> ${result.updated ? '업데이트됨' : '업데이트 실패'}</p>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="result-item error">
+                        <h3>❌ 처리 실패</h3>
+                        <p><strong>오류:</strong> ${result.error || '알 수 없는 오류'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // JSON 뷰어 업데이트
+        function updateJsonViewer() {
+            if (!structuredOutputData) return;
+            
+            const viewer = document.getElementById('jsonViewer');
+            viewer.textContent = JSON.stringify(structuredOutputData, null, 2);
+        }
+
+        // 초기 JSON 뷰어 업데이트
+        if (structuredOutputData) {
+            updateJsonViewer();
+        }
+    </script>
+</body>
+</html>
+

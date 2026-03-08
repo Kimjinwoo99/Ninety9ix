@@ -1,0 +1,18 @@
+# 웹 프레임워크
+flask==3.0.0
+flask-cors==4.0.0
+werkzeug==3.0.1
+
+# OCR 및 이미지 처리
+easyocr==1.7.1
+opencv-python==4.8.1.78
+Pillow==10.1.0
+numpy>=1.24.0
+
+# AI/ML
+openai>=1.0.0
+ultralytics>=8.0.0
+
+# HTTP 요청
+requests==2.31.0
+

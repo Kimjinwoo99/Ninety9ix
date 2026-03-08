@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>체크박스 에이전트 독립 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            background: white;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .upload-section {
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .upload-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-button:active {
+            transform: translateY(0);
+        }
+
+        .upload-button.secondary {
+            background: #28a745;
+        }
+
+        .upload-button.secondary:hover {
+            background: #218838;
+        }
+
+        .upload-button.danger {
+            background: #dc3545;
+        }
+
+        .upload-button.danger:hover {
+            background: #c82333;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .coordinate-input-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .coordinate-input-item {
+            display: grid;
+            grid-template-columns: 80px 1fr 80px 1fr 80px 1fr 80px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+        }
+
+        .coordinate-input-item label {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .coordinate-input-item input {
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .coordinate-input-item input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .coordinate-input-item .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .coordinate-input-item .remove-btn:hover {
+            background: #c82333;
+        }
+
+        .add-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .add-button:hover {
+            background: #138496;
+        }
+
+        .process-button {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .process-button:hover {
+            background: #e0a800;
+        }
+
+        .process-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 2px solid #dee2e6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+
+        .result-item.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .result-item.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .result-item h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .result-item p {
+            color: #666;
+            font-size: 0.9em;
+            margin: 3px 0;
+        }
+
+        .json-viewer {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            flex: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 200px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .coordinates-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 15px;
+            min-height: 150px;
+        }
+
+        .coordinate-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .coordinate-input-item {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☑️ 체크박스 에이전트 독립 테스트</h1>
+            <p>좌표를 직접 입력하여 체크박스를 선택합니다</p>
+        </div>
+
+        <div class="content">
+            <!-- 왼쪽 패널: JSON 업로드 및 좌표 입력 -->
+            <div class="panel">
+                <h2>📋 설정</h2>
+                
+                <div class="upload-section">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="jsonInput" class="file-input" accept=".json">
+                        <button class="upload-button" onclick="document.getElementById('jsonInput').click()">
+                            📋 structured_output.json 업로드
+                        </button>
+                    </div>
+                    <p class="info-text">structured_output.json 파일을 업로드하세요</p>
+                </div>
+
+                <div class="coordinate-input-section">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">📍 좌표 입력</h3>
+                    <div id="coordinateInputs" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
+                    <button class="add-button" onclick="addCoordinateInput()">➕ 좌표 입력 추가</button>
+                    <button class="process-button" id="processButton" onclick="processCoordinates()" disabled>
+                        ⚡ 체크박스 처리 실행
+                    </button>
+                </div>
+
+                <div class="result-section" id="resultSection" style="display: none;">
+                    <h3 style="color: #667eea; margin-bottom: 10px;">📊 처리 결과</h3>
+                    <div id="resultContent"></div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 패널: 입력된 좌표 목록 및 JSON -->
+            <div class="panel">
+                <h2>📄 데이터</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>처리 중...</p>
+                </div>
+
+                <div style="margin-bottom: 15px; flex-shrink: 0;">
+                    <h3 style="color: #667eea; margin-bottom: 10px;">📍 입력된 좌표 목록</h3>
+                    <div class="coordinates-list" id="coordinatesList">
+                        <p style="text-align: center; color: #999; padding: 20px;">
+                            좌표를 입력하세요
+                        </p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                    <h3 style="color: #667eea; margin-bottom: 10px; flex-shrink: 0;">📄 수정된 JSON</h3>
+                    <div class="json-viewer" id="jsonViewer">
+                        JSON 데이터가 여기에 표시됩니다
+                    </div>
+                </div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                    <h3 style="color: #667eea; margin-bottom: 10px; flex-shrink: 0;">📋 에이전트 로그</h3>
+                    <div class="json-viewer" id="logViewer" style="background: #1e1e1e; color: #d4d4d4;">
+                        로그가 여기에 표시됩니다
+                    </div>
+                    <button class="upload-button" onclick="refreshLogs()" style="margin-top: 10px; padding: 8px 16px; font-size: 0.9em; flex-shrink: 0;">
+                        🔄 로그 새로고침
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let structuredOutputData = null;
+        let coordinateInputs = [];
+        let inputCounter = 0;
+
+        // 페이지 로드 시 structured_output.json 자동 로드
+        window.onload = function() {
+            addCoordinateInput();
+            loadStructuredOutput();
+        };
+
+        // structured_output.json 자동 로드
+        async function loadStructuredOutput() {
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+            
+            try {
+                const response = await fetch('/api/checkbox/load', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const result = await response.json();
+                loading.classList.remove('active');
+
+                if (result.success) {
+                    addLog(`✅ structured_output.json 로드 완료 (${result.checkbox_count}개 체크박스)`, 'success');
+                    // 로드된 JSON 가져오기
+                    await fetchStructuredOutput();
+                    updateProcessButton();
+                } else {
+                    addLog(`❌ structured_output.json 로드 실패: ${result.error}`, 'error');
+                }
+            } catch (err) {
+                loading.classList.remove('active');
+                addLog(`❌ 서버 연결 오류: ${err.message}`, 'error');
+            }
+        }
+
+        // 로드된 structured_output 가져오기
+        async function fetchStructuredOutput() {
+            try {
+                // 캐시된 structured_output을 가져오기 위해 체크박스 목록 API 호출
+                // (실제로는 서버에서 캐시된 것을 사용)
+                const response = await fetch('/api/checkbox/list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        structured_output: {}  // 빈 객체 전달 (서버에서 캐시 사용)
+                    })
+                });
+
+                // 실제로는 좌표 처리 시 서버에서 캐시된 것을 사용
+                // 여기서는 로그만 업데이트
+                refreshLogs();
+            } catch (err) {
+                console.error('structured_output 가져오기 오류:', err);
+            }
+        }
+
+        // JSON 업로드 (수동 로드용)
+        document.getElementById('jsonInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    structuredOutputData = JSON.parse(event.target.result);
+                    updateJsonViewer();
+                    updateProcessButton();
+                    addLog('✅ JSON 파일 수동 로드 완료', 'success');
+                } catch (err) {
+                    addLog(`❌ JSON 파일 파싱 오류: ${err.message}`, 'error');
+                    alert('JSON 파일 파싱 오류: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // 좌표 입력 추가
+        function addCoordinateInput() {
+            inputCounter++;
+            const inputId = `coord_${inputCounter}`;
+            
+            const inputItem = document.createElement('div');
+            inputItem.className = 'coordinate-input-item';
+            inputItem.id = inputId;
+            inputItem.innerHTML = `
+                <label>X1:</label>
+                <input type="number" class="coord-x1" placeholder="X1" step="1">
+                <label>Y1:</label>
+                <input type="number" class="coord-y1" placeholder="Y1" step="1">
+                <label>X2:</label>
+                <input type="number" class="coord-x2" placeholder="X2" step="1">
+                <label>Y2:</label>
+                <input type="number" class="coord-y2" placeholder="Y2" step="1">
+                <button class="remove-btn" onclick="removeCoordinateInput('${inputId}')">삭제</button>
+            `;
+            
+            document.getElementById('coordinateInputs').appendChild(inputItem);
+            coordinateInputs.push(inputId);
+            updateCoordinatesList();
+            updateProcessButton();
+        }
+
+        // 좌표 입력 제거
+        function removeCoordinateInput(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
+                coordinateInputs = coordinateInputs.filter(inputId => inputId !== id);
+                updateCoordinatesList();
+                updateProcessButton();
+            }
+        }
+
+        // 좌표 목록 업데이트
+        function updateCoordinatesList() {
+            const list = document.getElementById('coordinatesList');
+            const coordinates = getCoordinates();
+            
+            if (coordinates.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">좌표를 입력하세요</p>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            coordinates.forEach((coord, index) => {
+                const item = document.createElement('div');
+                item.className = 'coordinate-item';
+                item.textContent = `[${index + 1}] X1: ${coord.x1}, Y1: ${coord.y1}, X2: ${coord.x2}, Y2: ${coord.y2}`;
+                list.appendChild(item);
+            });
+        }
+
+        // 입력된 좌표 가져오기
+        function getCoordinates() {
+            const coordinates = [];
+            coordinateInputs.forEach(inputId => {
+                const item = document.getElementById(inputId);
+                if (item) {
+                    const x1 = parseFloat(item.querySelector('.coord-x1').value);
+                    const y1 = parseFloat(item.querySelector('.coord-y1').value);
+                    const x2 = parseFloat(item.querySelector('.coord-x2').value);
+                    const y2 = parseFloat(item.querySelector('.coord-y2').value);
+                    
+                    if (!isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
+                        coordinates.push({ x1, y1, x2, y2 });
+                    }
+                }
+            });
+            return coordinates;
+        }
+
+        // 처리 버튼 상태 업데이트
+        function updateProcessButton() {
+            const button = document.getElementById('processButton');
+            const hasCoordinates = getCoordinates().length > 0;
+            // structured_output.json은 미리 로드되어 있으므로 좌표만 확인
+            button.disabled = !hasCoordinates;
+        }
+
+        // 좌표 입력 필드 변경 감지
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('coord-x1') || 
+                e.target.classList.contains('coord-y1') || 
+                e.target.classList.contains('coord-x2') || 
+                e.target.classList.contains('coord-y2')) {
+                updateCoordinatesList();
+                updateProcessButton();
+            }
+        });
+
+        // 좌표 처리 실행 (좌표만 사용, 미리 로드된 structured_output.json 사용)
+        async function processCoordinates() {
+            const coordinates = getCoordinates();
+            if (coordinates.length === 0) {
+                alert('좌표를 입력하세요.');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+            
+            loading.classList.add('active');
+            resultSection.style.display = 'block';
+            resultContent.innerHTML = '<p>처리 중...</p>';
+            addLog(`📍 좌표 처리 시작: ${coordinates.length}개`, 'info');
+
+            let successCount = 0;
+            let failCount = 0;
+            const results = [];
+
+            // 각 좌표에 대해 체크박스 처리 (좌표만 전달)
+            for (let i = 0; i < coordinates.length; i++) {
+                const coord = coordinates[i];
+                // 바운딩 박스의 중심점 계산
+                const centerX = (coord.x1 + coord.x2) / 2;
+                const centerY = (coord.y1 + coord.y2) / 2;
+
+                addLog(`[${i + 1}] 좌표 처리: (${centerX.toFixed(1)}, ${centerY.toFixed(1)})`, 'info');
+
+                try {
+                    // 좌표만 전달 (미리 로드된 structured_output.json 사용)
+                    const response = await fetch('http://localhost:5000/api/checkbox/process-coordinate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            click_x: centerX,
+                            click_y: centerY
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    // 로그 추가
+                    if (result.logs && result.logs.length > 0) {
+                        result.logs.forEach(log => {
+                            addLog(log.message, log.level);
+                        });
+                    }
+                    
+                    if (result.success && result.updated) {
+                        successCount++;
+                        if (result.updated_structured_output) {
+                            structuredOutputData = result.updated_structured_output;
+                        }
+                        results.push({
+                            index: i + 1,
+                            success: true,
+                            checkbox: result.checkbox,
+                            path: result.path,
+                            method: result.method || 'unknown',
+                            distance: result.distance
+                        });
+                        addLog(`✅ [${i + 1}] 처리 성공: ${result.checkbox.name || '이름 없음'} (방법: ${result.method})`, 'success');
+                    } else {
+                        failCount++;
+                        results.push({
+                            index: i + 1,
+                            success: false,
+                            error: result.error || '처리 실패'
+                        });
+                        addLog(`❌ [${i + 1}] 처리 실패: ${result.error || '알 수 없는 오류'}`, 'error');
+                    }
+                } catch (err) {
+                    failCount++;
+                    results.push({
+                        index: i + 1,
+                        success: false,
+                        error: '서버 연결 오류: ' + err.message
+                    });
+                    addLog(`❌ [${i + 1}] 서버 연결 오류: ${err.message}`, 'error');
+                }
+            }
+
+            loading.classList.remove('active');
+
+            // 결과 표시
+            let html = '';
+            results.forEach(result => {
+                if (result.success) {
+                    html += `
+                        <div class="result-item success">
+                            <h3>✅ [${result.index}] 처리 성공</h3>
+                            <p><strong>체크박스:</strong> ${result.checkbox.name || '이름 없음'}</p>
+                            <p><strong>경로:</strong> ${result.path}</p>
+                            <p><strong>방법:</strong> ${result.method || 'unknown'}</p>
+                            <p><strong>거리:</strong> ${result.distance ? result.distance.toFixed(2) : 'N/A'} 픽셀</p>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="result-item error">
+                            <h3>❌ [${result.index}] 처리 실패</h3>
+                            <p><strong>오류:</strong> ${result.error}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            html += `
+                <div class="result-item ${successCount > 0 ? 'success' : 'error'}" style="margin-top: 15px;">
+                    <h3>📊 전체 결과</h3>
+                    <p><strong>성공:</strong> ${successCount}개</p>
+                    <p><strong>실패:</strong> ${failCount}개</p>
+                    <p><strong>전체:</strong> ${coordinates.length}개</p>
+                </div>
+            `;
+
+            resultContent.innerHTML = html;
+            updateJsonViewer();
+            refreshLogs();
+        }
+
+        // 로그 추가 함수
+        function addLog(message, level = 'info') {
+            const logViewer = document.getElementById('logViewer');
+            const timestamp = new Date().toLocaleTimeString('ko-KR');
+            const icon = level === 'success' ? '✅' : level === 'error' ? '❌' : level === 'warning' ? '⚠️' : 'ℹ️';
+            const logEntry = `[${timestamp}] ${icon} ${message}\n`;
+            
+            if (logViewer.textContent === '로그가 여기에 표시됩니다') {
+                logViewer.textContent = logEntry;
+            } else {
+                logViewer.textContent += logEntry;
+            }
+            
+            // 스크롤을 맨 아래로
+            logViewer.scrollTop = logViewer.scrollHeight;
+        }
+
+        // 로그 새로고침
+        async function refreshLogs() {
+            try {
+                const response = await fetch('/api/checkbox/logs');
+                const result = await response.json();
+                
+                if (result.success && result.logs) {
+                    const logViewer = document.getElementById('logViewer');
+                    let logText = '';
+                    
+                    result.logs.forEach(log => {
+                        const icon = log.level === 'success' ? '✅' : log.level === 'error' ? '❌' : log.level === 'warning' ? '⚠️' : 'ℹ️';
+                        logText += `[${log.timestamp}] ${icon} ${log.message}\n`;
+                    });
+                    
+                    logViewer.textContent = logText || '로그가 없습니다';
+                    logViewer.scrollTop = logViewer.scrollHeight;
+                }
+            } catch (err) {
+                console.error('로그 가져오기 오류:', err);
+            }
+        }
+
+        // JSON 뷰어 업데이트
+        function updateJsonViewer() {
+            if (!structuredOutputData) return;
+            
+            const viewer = document.getElementById('jsonViewer');
+            viewer.textContent = JSON.stringify(structuredOutputData, null, 2);
+        }
+
+        // 초기 좌표 입력은 window.onload에서 처리됨
+    </script>
+</body>
+</html>
+
