@@ -147,10 +147,63 @@ npm run dev
   `/api/run-agent`            문서 분석 실행
 
 ------------------------------------------------------------------------
+## Environment Variables
 
-## 향후 개선 계획
+이 프로젝트는 일부 기능에서 **OpenAI API** 및 **외부 OCR API**를 사용합니다.  
+실행 전 아래 환경변수를 설정해야 합니다.
 
--   문서 유형 자동 분류 모델 추가
--   OCR 정확도 개선
--   실시간 검증 UI 개선
--   AI 기반 오류 수정 제안 기능
+### 1. `.env` 파일 생성
+
+`backend` 디렉터리에 `.env` 파일을 생성합니다.
+
+```
+backend/.env
+```
+
+예시:
+
+```
+OPENAI_API_KEY=your_openai_api_key
+OCR_API_BASE_URL=http://localhost:8000
+```
+
+---
+
+### 2. 환경변수 사용 방식
+
+백엔드 코드에서는 다음과 같이 환경변수를 통해 API 키와 외부 API 주소를 불러옵니다.
+
+```python
+import os
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OCR_API_BASE_URL = os.getenv("OCR_API_BASE_URL", "http://localhost:8000")
+```
+
+이 방식으로 **API 키 및 외부 서비스 주소가 코드에 직접 포함되지 않도록 관리합니다.**
+
+---
+
+### 3. `.env` 파일 보안
+
+`.env` 파일에는 API 키와 같은 민감한 정보가 포함될 수 있으므로  
+Git 저장소에 업로드하지 않습니다.
+
+`.gitignore`에 다음 항목이 포함되어 있어야 합니다.
+
+```
+.env
+```
+
+---
+
+## 제한 사항 (Limitations)
+
+본 프로젝트는 팀 프로젝트로 개발되었으며,
+서류 OCR 처리는 외부 클라우드 OCR 서버와 연동되어 있습니다.
+
+현재 해당 서버는 프로젝트 종료로 인해 접근이 제한되어
+서류 OCR API 호출이 정상적으로 동작하지 않을 수 있습니다.
+
+따라서 전체 파이프라인 중 일부 기능은
+Mock 데이터 또는 기존 결과 파일을 기반으로 확인할 수 있습니다.
