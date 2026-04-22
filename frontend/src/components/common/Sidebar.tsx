@@ -3,13 +3,13 @@ import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
-  FileText, 
-  FolderOpen,
+  FileText,
   BarChart3,
   Settings,
   Plus
 } from 'lucide-react';
 import { useRegistrationStore } from '../../stores/useRegistrationStore';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface NavItem {
   to: string;
@@ -48,11 +48,19 @@ const navItems: NavItem[] = [
 
 const Sidebar: React.FC = () => {
   const { openModal, startNewSession } = useRegistrationStore();
+  const { hasRole } = useAuth();
 
   const handleNewRegistration = () => {
     startNewSession();
     openModal();
   };
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.to === '/settings') {
+      return hasRole('SYSTEM_ADMIN');
+    }
+    return true;
+  });
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -64,7 +72,7 @@ const Sidebar: React.FC = () => {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-1">
-          {navItems.map((item) => (
+          {filteredNavItems.map((item) => (
             <NavItem key={item.to} item={item} />
           ))}
         </ul>

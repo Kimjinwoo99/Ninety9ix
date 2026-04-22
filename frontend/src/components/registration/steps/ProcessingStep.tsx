@@ -29,8 +29,13 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
   
   // 실행 중 플래그 (useRef로 중복 실행 방지 - 리렌더링과 무관하게 유지)
   const isProcessingRef = useRef(false);
+  // 언마운트/세션 변경 시 비동기 작업 중단용
+  const unmountedRef = useRef(false);
 
   useEffect(() => {
+    unmountedRef.current = false;
+    const sessionId = useRegistrationStore.getState().currentSession?.id ?? null;
+
     // 이미 처리 완료되었거나 취소된 경우 실행하지 않음
     if (isProcessingComplete || isCancelled) {
       console.log('[ProcessingStep] 이미 처리 완료되었거나 취소됨, 실행 스킵');
@@ -45,8 +50,14 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
     
     // 실행 시작 플래그 설정
     isProcessingRef.current = true;
-    console.log('[ProcessingStep] 🔒 처리 시작 - 중복 실행 방지 플래그 설정');
+    console.log('[ProcessingStep] 🔒 처리 시작 - 중복 실행 방지 플래그 설정 (sessionId:', sessionId, ')');
     
+    const isStillCurrentSession = () => {
+      if (unmountedRef.current) return false;
+      const current = useRegistrationStore.getState().currentSession?.id;
+      return current != null && current === sessionId;
+    };
+
     const processDocuments = async () => {
       // 취소된 경우 즉시 종료
       if (isCancelled) {
@@ -55,6 +66,10 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
       }
       if (!currentSession) {
         console.log('[ProcessingStep] currentSession이 없습니다.');
+        return;
+      }
+      if (!isStillCurrentSession()) {
+        console.log('[ProcessingStep] 세션이 변경되어 처리 중단');
         return;
       }
 
@@ -384,9 +399,10 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
         hasIdCard
       });
       
-      // 취소 확인
-      if (isCancelled) {
-        console.log('[ProcessingStep] OCR 처리 완료 후 취소됨');
+      // 취소/세션 확인 (이후 단계에서 이전 세션에 결과가 들어가지 않도록)
+      if (isCancelled || !isStillCurrentSession()) {
+        console.log('[ProcessingStep] OCR 처리 완료 후 취소/세션 변경됨');
+        isProcessingRef.current = false;
         return;
       }
       
@@ -456,7 +472,7 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
             }
           } catch (error) {
             console.error(`[ProcessingStep] 서류 OCR 처리 중 오류:`, error);
-            useRegistrationStore.getState().updateDocumentStatus(firstDocument.id, 'error', 0);
+            useRegistrationStore.getState().updateDocumentStatus(firstDocument.id, 'rejected', 0);
             // 오류가 발생해도 체크박스 탐지는 계속 진행
           }
         }
@@ -510,15 +526,15 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
       if (structuredOutputGenerated) {
         console.log('[ProcessingStep] ✅ structured_output.json 생성 완료 (서류 OCR 결과)');
       } else {
-        console.log('[ProcessingStep] ⚠️ structured_output.json이 생성되지 않았습니다. 기존 파일을 사용합니다.');
+        console.log('[ProcessingStep] ⚠️ 이번 세션에서 서류 OCR이 없어 structured_output을 생성하지 않았습니다. (이전 세션 파일 사용 안 함)');
       }
       
       setProcessingSteps(prev => ({ ...prev, documentOCR: true }));
       console.log('[ProcessingStep] ✅ 서류 OCR 추출 완료');
       
-      // 취소 확인
-      if (isCancelled) {
-        console.log('[ProcessingStep] 서류 OCR 완료 후 취소됨');
+      // 취소/세션 확인
+      if (isCancelled || !isStillCurrentSession()) {
+        console.log('[ProcessingStep] 서류 OCR 완료 후 취소/세션 변경됨');
         return;
       }
       
@@ -695,9 +711,9 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
       setProcessingSteps(prev => ({ ...prev, checkboxDetection: true }));
       console.log('[ProcessingStep] ✅ 체크박스 항목 탐지 및 반영 완료');
       
-      // 취소 확인
-      if (isCancelled) {
-        console.log('[ProcessingStep] 체크박스 처리 완료 후 취소됨');
+      // 취소/세션 확인
+      if (isCancelled || !isStillCurrentSession()) {
+        console.log('[ProcessingStep] 체크박스 처리 완료 후 취소/세션 변경됨');
         return;
       }
       
@@ -705,9 +721,10 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
       setProcessingSteps(prev => ({ ...prev, agentAnalysis: false }));
       console.log('[ProcessingStep] ========== 에이전트 분석결과 도출 단계 ==========');
       
-      // 신분증 OCR 결과와 structured_output.json을 사용하여 Agent 실행
+      // 이번 세션에서 서류 OCR이 없으면 이전 세션의 structured_output을 사용하지 않음 (혼선 방지)
+      const hasFreshStructuredOutput = structuredOutputGenerated;
       const finalIdCardOCR = finalSession?.ocrResults.find((ocr) => ocr.idCardResult !== undefined);
-      if (finalIdCardOCR && finalIdCardOCR.idCardResult) {
+      if (finalIdCardOCR && finalIdCardOCR.idCardResult && hasFreshStructuredOutput) {
         // idCardResult를 변수에 저장하여 타입 안전성 확보
         const idCardResult = finalIdCardOCR.idCardResult;
         
@@ -764,6 +781,11 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
                                'total_fields' in agentResultData.summary;
           
           if (isAgentReady) {
+            if (!isStillCurrentSession()) {
+              console.log('[ProcessingStep] Agent 완료 시점에 세션이 변경되어 store 업데이트 스킵');
+              isProcessingRef.current = false;
+              return;
+            }
             console.log('[ProcessingStep] ✅ Agent 결과가 완전히 준비되었습니다.');
             setAgentResult(agentResultData);
             
@@ -853,6 +875,19 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
           // 오류 발생 시 검토 단계로 이동하지 않음 - status 변경 안 함
           console.error('[ProcessingStep] ❌ Agent 실행 오류로 인해 검토 단계로 이동하지 않습니다.');
         }
+      } else if (finalIdCardOCR && finalIdCardOCR.idCardResult && !hasFreshStructuredOutput) {
+        // 신분증은 있으나 이번 세션에서 서류 OCR이 없음 → 이전 세션 파일로 Agent 호출하지 않음
+        console.log('[ProcessingStep] 서류가 없어 비교 분석을 건너뜁니다 (이전 세션 데이터 사용 안 함).');
+        if (isStillCurrentSession()) {
+          setAgentResult({
+            success: true,
+            summary: { total_fields: 0, matched: 0, mismatched: 0, warnings: 0 },
+            final_report: '이번 등록에서는 서류가 없어 신분증·서류 비교 분석을 수행하지 않았습니다. 신분증 정보만 검토해 주세요.',
+          });
+          setProcessingSteps(prev => ({ ...prev, agentAnalysis: true }));
+          setIsProcessingComplete(true);
+        }
+        isProcessingRef.current = false;
       } else {
         console.log('[ProcessingStep] 신분증 OCR 결과가 없어 Agent 실행 스킵');
         setProcessingSteps(prev => ({ ...prev, agentAnalysis: true })); // 스킵해도 완료로 표시
@@ -904,6 +939,12 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({ onNext }) => {
     };
 
     processDocuments();
+
+    return () => {
+      unmountedRef.current = true;
+      isProcessingRef.current = false;
+      console.log('[ProcessingStep] 언마운트/정리 - 비동기 작업 중단 플래그 설정');
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 마운트 시 한 번만 실행 (의존성 배열 비워서 중복 실행 방지)
 

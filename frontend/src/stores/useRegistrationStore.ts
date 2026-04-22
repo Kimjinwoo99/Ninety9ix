@@ -193,7 +193,7 @@ export const useRegistrationStore = create<RegistrationStore>((set) => ({
   },
   
   cancelSession: () => {
-    set({ currentSession: null, isModalOpen: false });
+    set({ currentSession: null, agentResult: null, isModalOpen: false });
   },
 }));
 

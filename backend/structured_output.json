@@ -373,7 +373,7 @@
                 438.00515463917526
               ]
             ],
-            "selected": false
+            "selected": true
           },
           {
             "name": "베이직",
@@ -408,7 +408,7 @@
                 487.509708737864
               ]
             ],
-            "selected": true
+            "selected": false
           },
           {
             "name": "지니TV 스카이라이프 베이직",
@@ -812,7 +812,7 @@
                 896.5560747663552
               ]
             ],
-            "selected": false
+            "selected": true
           }
         ],
         "selected_option": null
@@ -1789,7 +1789,7 @@
                 2063.875
               ]
             ],
-            "selected": false
+            "selected": true
           },
           {
             "name": "임대",

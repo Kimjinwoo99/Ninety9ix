@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import type { Customer } from '../../types';
+import { fetchCustomersFromSpring, isSpringConfigured } from '../../api/springApi';
 
 const Customers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -9,17 +10,19 @@ const Customers: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadCustomers = () => {
+    const loadCustomers = async () => {
       try {
-        const storedCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
-        
-        // Transform data to match Customer type if necessary
-        const transformedData = storedCustomers.map((item: any) => ({
-          ...item,
-          registeredAt: new Date(item.registeredAt) // Convert string date to Date object
-        }));
-        
-        setCustomers(transformedData);
+        if (isSpringConfigured()) {
+          const fromApi = await fetchCustomersFromSpring();
+          setCustomers(fromApi as Customer[]);
+        } else {
+          const storedCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
+          const transformedData = storedCustomers.map((item: any) => ({
+            ...item,
+            registeredAt: new Date(item.registeredAt),
+          }));
+          setCustomers(transformedData);
+        }
       } catch (error) {
         console.error('Error loading customers:', error);
       } finally {
@@ -27,7 +30,7 @@ const Customers: React.FC = () => {
       }
     };
 
-    loadCustomers();
+    void loadCustomers();
     
     // 주기적으로 업데이트 (다른 탭에서 승인 완료 시 반영)
     const interval = setInterval(loadCustomers, 1000);

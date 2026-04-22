@@ -1,7 +1,11 @@
 import React from 'react';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, LogOut, Search, User } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header: React.FC = () => {
+  const { user, logout } = useAuth();
+  const roleLabel = user?.role === 'SYSTEM_ADMIN' ? '시스템 관리자' : '실무자';
+
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
       <div className="flex items-center flex-1">
@@ -26,11 +30,18 @@ const Header: React.FC = () => {
         {/* User Profile */}
         <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
           <div className="text-right">
-            <div className="text-sm font-medium text-gray-900">김직원</div>
-            <div className="text-xs text-gray-500">관리자</div>
+            <div className="text-sm font-medium text-gray-900">{user?.name ?? '-'}</div>
+            <div className="text-xs text-gray-500">{roleLabel}</div>
           </div>
           <button className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
             <User size={20} className="text-gray-600" />
+          </button>
+          <button
+            onClick={logout}
+            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="로그아웃"
+          >
+            <LogOut size={18} />
           </button>
         </div>
       </div>

@@ -1,14 +1,15 @@
 import React from 'react';
 import { Shield, Bell, User, Database } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Settings: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">설정</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          시스템 설정 및 사용자 관리
-        </p>
+        <p className="text-sm text-gray-500 mt-1">시스템 설정 및 사용자 관리</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -19,9 +20,7 @@ const Settings: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900">Agent 규칙</h3>
           </div>
-          <p className="text-sm text-gray-600 mb-4">
-            자동 판단 임계값 및 검증 규칙을 설정합니다.
-          </p>
+          <p className="text-sm text-gray-600 mb-4">자동 판단 임계값 및 검증 규칙을 설정합니다.</p>
           <button className="w-full py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
             설정하기
           </button>
@@ -34,9 +33,7 @@ const Settings: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900">필수 필드 관리</h3>
           </div>
-          <p className="text-sm text-gray-600 mb-4">
-            문서 유형별 필수 입력 필드를 관리합니다.
-          </p>
+          <p className="text-sm text-gray-600 mb-4">문서 유형별 필수 입력 필드를 관리합니다.</p>
           <button className="w-full py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
             설정하기
           </button>
@@ -49,11 +46,12 @@ const Settings: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900">사용자 관리</h3>
           </div>
-          <p className="text-sm text-gray-600 mb-4">
-            시스템 사용자 및 권한을 관리합니다.
-          </p>
-          <button className="w-full py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
-            설정하기
+          <p className="text-sm text-gray-600 mb-4">사용자 목록, 권한, 발급요청 처리, 발급 이력을 관리합니다.</p>
+          <button
+            onClick={() => navigate('/user-management')}
+            className="w-full py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
+          >
+            사용자 관리 페이지로 이동
           </button>
         </div>
 
@@ -64,9 +62,7 @@ const Settings: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900">알림 설정</h3>
           </div>
-          <p className="text-sm text-gray-600 mb-4">
-            시스템 알림 및 이메일 설정을 관리합니다.
-          </p>
+          <p className="text-sm text-gray-600 mb-4">시스템 알림 및 이메일 설정을 관리합니다.</p>
           <button className="w-full py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
             설정하기
           </button>

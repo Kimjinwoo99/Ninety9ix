@@ -121,3 +121,41 @@ export interface Statistics {
   autoApprovalRate: number; // 퍼센트
 }
 
+export type UserRole = 'SYSTEM_ADMIN' | 'STAFF';
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  name: string;
+  employeeNumber?: string;
+  department?: string;
+  role: UserRole;
+  superAdmin?: boolean;
+  enabled: boolean;
+  createdAt?: string;
+}
+
+export type AccessRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface AccessRequest {
+  id: number;
+  name: string;
+  employeeNumber: string;
+  department: string;
+  requestedRole: UserRole;
+  status: AccessRequestStatus;
+  reviewNote?: string;
+  reviewedBy?: string;
+  createdAt: string;
+  reviewedAt?: string;
+}
+
+export interface ProvisionHistory {
+  id: number;
+  accessRequestId: number;
+  userId: number;
+  issuedBy: string;
+  issuedAt: string;
+  message: string;
+}
+

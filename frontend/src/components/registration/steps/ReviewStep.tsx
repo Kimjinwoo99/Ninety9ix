@@ -671,6 +671,12 @@ const ReviewStep: React.FC<ReviewStepProps> = () => {
           console.warn('structured_output.json 읽기 실패, 기본 계약 정보만 저장:', error);
         }
 
+        // Spring(MySQL)에 고객 동기화 (VITE_SPRING_API_URL 설정 시)
+        const { isSpringConfigured, postCustomerToSpring } = await import('../../../api/springApi');
+        if (isSpringConfigured()) {
+          await postCustomerToSpring(customerData);
+        }
+
         // 로컬 스토리지에 데이터 저장
         // 1. 고객 데이터 저장
         const existingCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
