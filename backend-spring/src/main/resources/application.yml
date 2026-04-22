@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ninety9ix-api
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ninety9ix}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&serverTimezone=Asia/Seoul
+    username: ${MYSQL_USER:ninety9ix}
+    password: ${MYSQL_PASSWORD:ninety9ix}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+
+app:
+  security:
+    jwt:
+      secret: ${APP_JWT_SECRET:change-this-to-a-long-random-secret-key-for-production}
+      expiration-seconds: ${APP_JWT_EXPIRATION_SECONDS:28800}
+    seed-admin:
+      username: ${APP_ADMIN_USERNAME:admin}
+      password: ${APP_ADMIN_PASSWORD:Admin1234!}
+      name: ${APP_ADMIN_NAME:System Admin}
